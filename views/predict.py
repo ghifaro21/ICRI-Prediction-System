@@ -1,7 +1,64 @@
 import streamlit as st
+import streamlit.components.v1 as components
 
 from components.charts import make_bar, make_gauge
 from core.model import predict_icri
+
+
+def render_osm_location_input() -> None:
+    st.markdown("""
+    <div class="sec-hdr">
+        <div class="sec-dot" style="background:rgba(16,185,129,.15);">📍</div>
+        <div>
+            <div class="sec-title">Bagian 4 — Lokasi Perlintasan</div>
+            <div class="sec-desc">Penanda visual berbasis OpenStreetMap, tidak memengaruhi prediksi model</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    loc_col, map_col = st.columns([0.9, 1.4])
+
+    with loc_col:
+        lokasi = st.text_input(
+            "Nama / Catatan Lokasi",
+            placeholder="Contoh: JPL dekat Stasiun Bandung",
+            help="Opsional, hanya sebagai catatan visual untuk pengguna.",
+        )
+        lat = st.number_input(
+            "Latitude",
+            min_value=-90.0,
+            max_value=90.0,
+            value=-6.914744,
+            step=0.000100,
+            format="%.6f",
+        )
+        lon = st.number_input(
+            "Longitude",
+            min_value=-180.0,
+            max_value=180.0,
+            value=107.609810,
+            step=0.000100,
+            format="%.6f",
+        )
+        label = lokasi.strip() or "Lokasi perlintasan dipilih"
+        st.caption(f"{label} · {lat:.6f}, {lon:.6f}")
+
+    with map_col:
+        delta = 0.008
+        bbox = f"{lon - delta}%2C{lat - delta}%2C{lon + delta}%2C{lat + delta}"
+        marker = f"{lat}%2C{lon}"
+        src = f"https://www.openstreetmap.org/export/embed.html?bbox={bbox}&layer=mapnik&marker={marker}"
+        components.html(
+            f"""
+            <iframe
+                title="Peta lokasi perlintasan OSM"
+                src="{src}"
+                style="width:100%;height:360px;border:1px solid rgba(148,163,184,.25);border-radius:12px;"
+                loading="lazy">
+            </iframe>
+            """,
+            height=380,
+        )
 
 
 def render_predict():
@@ -182,6 +239,8 @@ def render_predict():
             help="Perkirakan via Google Maps / peta jalur KAI",
         )
 
+    render_osm_location_input()
+
     # ── TOMBOL PREDIKSI ───────────────────────────────────────────────────────
     st.markdown("<br>", unsafe_allow_html=True)
     _, btn_col, _ = st.columns([1, 1.8, 1])
@@ -330,6 +389,4 @@ def render_predict():
                 Pastikan input manual sudah akurat untuk hasil prediksi optimal.
             </div>
             """, unsafe_allow_html=True)
-
-
 
